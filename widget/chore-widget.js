@@ -55,7 +55,10 @@ async function signIn() {
   const res = await req.loadJSON()
   if (res.idToken) return res.idToken
   const code = res.error?.message ?? '未知錯誤'
-  if (/PASSWORD|CREDENTIAL|EMAIL_NOT_FOUND/.test(code)) {
+  if (/DISABLED|OPERATION_NOT_ALLOWED/.test(code)) {
+    throw new Error('Firebase 尚未啟用「電子郵件/密碼」登入')
+  }
+  if (/INVALID_PASSWORD|INVALID_LOGIN_CREDENTIALS|EMAIL_NOT_FOUND/.test(code)) {
     Keychain.remove(KEYCHAIN_KEY) // wrong password: ask again next time it runs in the app
     throw new Error('密碼不正確，請打開 Scriptable 點一下腳本重新輸入')
   }
