@@ -11,7 +11,8 @@ function status(tracker, today) {
   const days = daysBetween(lastKey, today)
   const left = tracker.intervalDays - days
   const ratio = Math.min(days / tracker.intervalDays, 1)
-  const level = ratio >= 1 ? 'over' : ratio >= 0.75 ? 'soon' : ratio >= 0.5 ? 'mid' : 'ok'
+  // Green until 80%, orange from 80%, red once due. The widget uses the same 80% cut-off.
+  const level = ratio >= 1 ? 'over' : ratio >= 0.8 ? 'soon' : 'ok'
   const label = left > 1 ? `還有 ${left} 天` : left === 1 ? '明天到期' : left === 0 ? '今天到期' : `超過 ${-left} 天`
   return { lastKey, days, ratio, level, label, urgency: days / tracker.intervalDays }
 }

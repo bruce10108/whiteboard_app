@@ -476,10 +476,6 @@ input {
   transition: width 0.4s ease;
 }
 
-.level-mid .bar-fill {
-  background: var(--mid);
-}
-
 .level-soon .bar-fill {
   background: var(--soon);
 }
