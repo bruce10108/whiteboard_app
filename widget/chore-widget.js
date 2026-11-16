@@ -2,12 +2,13 @@
 // Read-only: shows tonight's unfinished items, trackers at 80%+ and the
 // two newest messages. Tap the widget to open the chore board.
 //
-// Setup: paste this whole file into a new Scriptable script, fill in
-// WIDGET_PASSWORD below, then add a medium Scriptable widget to the home
-// screen and pick this script.
+// Setup: paste this whole file into a new Scriptable script and run it once
+// inside Scriptable. It asks for the widget account's password and keeps it
+// in the iPhone Keychain (never in this file). Then add a medium Scriptable
+// widget to the home screen and pick this script.
 
 const WIDGET_EMAIL = 'widget@whiteboard-app-6db39.firebaseapp.com'
-const WIDGET_PASSWORD = '在這裡填入小工具帳號的密碼'
+const KEYCHAIN_KEY = 'chore-board-widget-password'
 
 const API_KEY = 'AIzaSyCzgonNEV5CZYbTjtjcJISwYnXthFTlW2k'
 const PROJECT = 'whiteboard-app-6db39'
@@ -28,14 +29,37 @@ const C = {
 
 // ---------- Firebase REST ----------
 
+/** Password from the Keychain; asks for it when run inside the Scriptable app. */
+async function getPassword() {
+  if (Keychain.contains(KEYCHAIN_KEY)) return Keychain.get(KEYCHAIN_KEY)
+  if (config.runsInWidget) throw new Error('請先打開 Scriptable，點一下這個腳本輸入密碼')
+  const alert = new Alert()
+  alert.title = '家事板小工具'
+  alert.message = '請輸入小工具帳號的密碼（只需輸入一次）'
+  alert.addSecureTextField('密碼')
+  alert.addAction('儲存')
+  alert.addCancelAction('取消')
+  if ((await alert.present()) === -1) throw new Error('沒有輸入密碼')
+  const password = alert.textFieldValue(0).trim()
+  if (!password) throw new Error('沒有輸入密碼')
+  Keychain.set(KEYCHAIN_KEY, password)
+  return password
+}
+
 async function signIn() {
+  const password = await getPassword()
   const req = new Request(`https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=${API_KEY}`)
   req.method = 'POST'
   req.headers = { 'Content-Type': 'application/json' }
-  req.body = JSON.stringify({ email: WIDGET_EMAIL, password: WIDGET_PASSWORD, returnSecureToken: true })
+  req.body = JSON.stringify({ email: WIDGET_EMAIL, password, returnSecureToken: true })
   const res = await req.loadJSON()
-  if (!res.idToken) throw new Error(`登入失敗：${res.error?.message ?? '未知錯誤'}`)
-  return res.idToken
+  if (res.idToken) return res.idToken
+  const code = res.error?.message ?? '未知錯誤'
+  if (/PASSWORD|CREDENTIAL|EMAIL_NOT_FOUND/.test(code)) {
+    Keychain.remove(KEYCHAIN_KEY) // wrong password: ask again next time it runs in the app
+    throw new Error('密碼不正確，請打開 Scriptable 點一下腳本重新輸入')
+  }
+  throw new Error(`登入失敗：${code}`)
 }
 
 function decode(v) {
