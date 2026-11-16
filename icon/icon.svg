@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- Full-bleed square: iOS applies its own rounded mask. -->
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#3a9470"/>
+      <stop offset="1" stop-color="#256b4c"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" fill="url(#bg)"/>
+  <!-- House -->
+  <path d="M256 112 L412 236 L376 236 L376 400 L136 400 L136 236 L100 236 Z"
+        fill="#fbf8f1" stroke="#fbf8f1" stroke-width="28" stroke-linejoin="round"/>
+  <!-- Check mark -->
+  <path d="M190 314 L238 360 L326 262" fill="none" stroke="#2f7d5b"
+        stroke-width="38" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- Sparkle -->
+  <path d="M404 96 Q410 128 440 134 Q410 140 404 172 Q398 140 368 134 Q398 128 404 96 Z" fill="#f4cd5c"/>
+</svg>

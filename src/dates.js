@@ -1,33 +1,47 @@
-// Dates are stored as local 'YYYY-MM-DD' strings so "today" means the
-// family's calendar day, not a UTC instant.
+// The household "day" starts at 04:00, so chores done after midnight
+// (after the kids are asleep) still count for the evening before.
+const DAY_START_HOUR = 4
 
-export function todayString() {
-  return new Date().toLocaleDateString('sv') // sv locale formats as YYYY-MM-DD
+const pad = (n) => String(n).padStart(2, '0')
+
+/** Household day as 'YYYY-MM-DD' (local time, shifted by DAY_START_HOUR). */
+export function dayKey(date = new Date()) {
+  const d = new Date(date.getTime() - DAY_START_HOUR * 3600000)
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
 }
 
-function toUtcDay(dateString) {
-  const [y, m, d] = dateString.split('-').map(Number)
+function toDayNumber(key) {
+  const [y, m, d] = key.split('-').map(Number)
   return Date.UTC(y, m - 1, d) / 86400000
 }
 
-/** Whole days from today until the due date (negative = overdue). */
-export function daysUntil(dateString) {
-  return toUtcDay(dateString) - toUtcDay(todayString())
+export function daysBetween(fromKey, toKey) {
+  return toDayNumber(toKey) - toDayNumber(fromKey)
 }
 
-export function dueLabel(dateString) {
-  const diff = daysUntil(dateString)
-  if (diff === 0) return '今天'
-  if (diff === 1) return '明天'
-  if (diff < 0) return `逾期 ${-diff} 天`
-  const [, m, d] = dateString.split('-').map(Number)
-  return `${m}/${d}`
+const WEEKDAYS = ['日', '一', '二', '三', '四', '五', '六']
+
+export function headerDate(key) {
+  const [y, m, d] = key.split('-').map(Number)
+  const weekday = WEEKDAYS[new Date(y, m - 1, d).getDay()]
+  return `${m} 月 ${d} 日・週${weekday}`
 }
 
-export function formatTime(timestamp) {
-  if (!timestamp) return ''
-  const date = timestamp.toDate()
-  const sameDay = date.toLocaleDateString('sv') === todayString()
-  const time = date.toLocaleTimeString('zh-TW', { hour: '2-digit', minute: '2-digit', hour12: false })
-  return sameDay ? `今天 ${time}` : `${date.getMonth() + 1}/${date.getDate()} ${time}`
+export function clock(timestamp) {
+  const d = timestamp.toDate()
+  return `${pad(d.getHours())}:${pad(d.getMinutes())}`
+}
+
+/** "今天 21:30" / "昨天 08:12" / "11/3 19:05" */
+export function when(timestamp, todayKey) {
+  const days = daysBetween(dayKey(timestamp.toDate()), todayKey)
+  if (days === 0) return `今天 ${clock(timestamp)}`
+  if (days === 1) return `昨天 ${clock(timestamp)}`
+  const d = timestamp.toDate()
+  return `${d.getMonth() + 1}/${d.getDate()} ${clock(timestamp)}`
+}
+
+/** Days since a timestamp, counted in household days. */
+export function daysSince(timestamp, todayKey) {
+  return daysBetween(dayKey(timestamp.toDate()), todayKey)
 }
