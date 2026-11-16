@@ -418,10 +418,47 @@ input {
   font-variant-numeric: tabular-nums;
 }
 
-.tracker-edit {
+.interval {
+  margin-left: 2px;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+/* Tappable "上次 11/16": an invisible native date input sits on top,
+   so tapping opens the phone's date picker. */
+.date-pick {
+  position: relative;
+  text-decoration: underline dotted;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+.date-pick input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.tracker-editing {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 8px;
+}
+
+.title-edit {
+  flex: 1;
+  min-width: 0;
+  min-height: 44px;
+  margin: 4px 0;
+  padding: 0 12px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--bg);
 }
 
 .bar {

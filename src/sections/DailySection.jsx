@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Timestamp, addDoc, collection, deleteDoc, deleteField, doc, setDoc } from 'firebase/firestore'
+import { Timestamp, addDoc, collection, deleteDoc, deleteField, doc, setDoc, updateDoc } from 'firebase/firestore'
 import { db } from '../firebase'
 import { useCollection, useDocument } from '../hooks'
 import { clock } from '../dates'
@@ -35,6 +35,12 @@ export default function DailySection({ ctx }) {
     setNewTitle('')
   }
 
+  function saveTitle(item, input) {
+    const title = input.value.trim()
+    if (title && title !== item.title) updateDoc(doc(db, 'daily', item.id), { title }).catch(onError)
+    else input.value = item.title
+  }
+
   function remove(item) {
     if (window.confirm(`從每日必做刪除「${item.title}」？`)) deleteDoc(doc(db, 'daily', item.id)).catch(onError)
   }
@@ -51,27 +57,32 @@ export default function DailySection({ ctx }) {
         {sorted.map((item) => {
           const entry = log?.[item.id]
           return (
-            <li key={item.id} className={`row${entry ? ' is-done' : ''}`}>
-              <button
-                className="row-main"
-                role="checkbox"
-                aria-checked={!!entry}
-                onClick={() => toggle(item)}
-                disabled={editing}
-              >
-                <span className="check" aria-hidden="true">
-                  {entry ? '✓' : ''}
-                </span>
-                <span className="row-title">{item.title}</span>
-                {entry && (
-                  <span className="row-side">
-                    {nameOf(entry.by)}・{clock(entry.at)}
+            <li key={item.id} className={`row${entry && !editing ? ' is-done' : ''}`}>
+              {editing ? (
+                <>
+                  <input
+                    key={item.title}
+                    className="title-edit"
+                    defaultValue={item.title}
+                    maxLength={40}
+                    onBlur={(e) => saveTitle(item, e.target)}
+                    aria-label="項目名稱"
+                  />
+                  <button className="delete" onClick={() => remove(item)} aria-label={`刪除「${item.title}」`}>
+                    ✕
+                  </button>
+                </>
+              ) : (
+                <button className="row-main" role="checkbox" aria-checked={!!entry} onClick={() => toggle(item)}>
+                  <span className="check" aria-hidden="true">
+                    {entry ? '✓' : ''}
                   </span>
-                )}
-              </button>
-              {editing && (
-                <button className="delete" onClick={() => remove(item)} aria-label={`刪除「${item.title}」`}>
-                  ✕
+                  <span className="row-title">{item.title}</span>
+                  {entry && (
+                    <span className="row-side">
+                      {nameOf(entry.by)}・{clock(entry.at)}
+                    </span>
+                  )}
                 </button>
               )}
             </li>
